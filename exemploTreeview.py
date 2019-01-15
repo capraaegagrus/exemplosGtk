@@ -84,7 +84,7 @@ class FiestraPrincipal(Gtk.Window):
 
     def on_btnEngadir_clicked (self, control, modelo):
         fila = self.cmbCategoria.get_active_iter()
-        datos = [self.txtHotel.get_text(), self.txtDireccion.get_text(),self.chkMascotas.get_mode(),self.txtOcupacion.get_text(), self.cmbCategoria.get_model()[fila][0]]
+        datos = [self.txtHotel.get_text(), self.txtDireccion.get_text(),self.txtOcupacion.get_text(),self.chkMascotas.get_mode(), self.cmbCategoria.get_model()[fila][0]]
         modelo.append (datos) #Engadir o recollido dos controis
 
 
