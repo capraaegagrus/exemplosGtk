@@ -11,20 +11,28 @@ class FiestraPrincipal(Gtk.Window):
         boxV = Gtk.Box (orientation = Gtk.Orientation.VERTICAL)
 
         modelo = Gtk.ListStore (str, str, float,bool,str )
+        self.filtro_categoria = modelo.filter_new()
+        self.filtro_categoria.set_visible_func (self.categoria_filtro)
+        self.parametro_filtro_categoria = None
+
 
         modelo.append  (["Hotel Melia", "García Barbón 48", 75.38, True, '*'])
         modelo.append  (["Hotel Galeones", "Avda Madrid", 80.88, False, '**'])
         modelo.append  (["Hotel Baiha", "Paseo as avenidas 55", 60.38, True,'*****'])
 
         self.categoria = Gtk.ListStore (str)
-        for estrelas in range (1,4):
+        for estrelas in range (1,6):
             self.categoria.append([estrelas*'*'])
 
 
-        vista = Gtk.TreeView(model = modelo)
+        vista = Gtk.TreeView(model = self.filtro_categoria)#modelo filtrado
+        seleccion = vista.get_selection()
+        seleccion.connect("changed", self.on_seleccion_changed)
         boxV.pack_start (vista, True, True, 0)
 
         celdaText = Gtk.CellRendererText()
+        celdaText.set_property ("editable", True)
+        celdaText.connect ("edited", self.on_celdaText_edited, modelo)
         columnaHotel = Gtk.TreeViewColumn ('Aloxamento', celdaText, text = 0)
         columnaHotel.set_sort_column_id (0)
         vista.append_column (columnaHotel)
@@ -74,6 +82,21 @@ class FiestraPrincipal(Gtk.Window):
 
         boxV.pack_start(boxH, True, True, 0)
 
+        boxHFiltro = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+
+        self.cmbCategoriaF = Gtk.ComboBox(model=self.categoria)
+        celdaComboF = Gtk.CellRendererText()
+        self.cmbCategoriaF.pack_start(celdaComboF, True)
+        self.cmbCategoriaF.add_attribute(celdaComboF, "text", 0)
+
+
+        btnFiltrar = Gtk.Button (label="Filtrar")
+        btnFiltrar.connect ("clicked", self.on_btnFiltrar_clicked)
+
+        boxHFiltro.pack_end (btnFiltrar, False, False, 0)
+        boxHFiltro.pack_end(self.cmbCategoriaF, False, False, 0)
+        boxV.pack_start (boxHFiltro, True, True, 0)
+
         self.add(boxV)
 
         self.connect("destroy", Gtk.main_quit)
@@ -86,6 +109,45 @@ class FiestraPrincipal(Gtk.Window):
         fila = self.cmbCategoria.get_active_iter()
         datos = [self.txtHotel.get_text(), self.txtDireccion.get_text(),self.txtOcupacion.get_text(),self.chkMascotas.get_mode(), self.cmbCategoria.get_model()[fila][0]]
         modelo.append (datos) #Engadir o recollido dos controis
+
+    def on_seleccion_changed (self, seleccion):
+        modelo, punteiro = seleccion.get_selected()
+        if punteiro is not None:
+            self.txtHotel.set_text(modelo [punteiro][0])
+            self.txtDireccion.set_text (modelo [punteiro][1])
+            self.txtOcupacion.set_text (str (modelo [punteiro][2]))
+            self.chkMascotas.set_active(modelo [punteiro][3])
+            categorias = self.cmbCategoria.get_model()
+            #Non funcionaaaaa, REVISAR
+            i=0
+            for categoria in categorias:
+
+                if modelo [punteiro][4] == categoria[0] :
+                    self.cmbCategoria.set_active (i)
+                i = i + 1
+
+    def on_celdaText_edited (self, control, punteiro, texto, modelo):
+        modelo [punteiro][0] = texto
+
+    def on_btnFiltrar_clicked (self, control):
+        punteiro = self.cmbCategoriaF.get_active_iter()
+        print ("Filtrando os hoteis da categoria: ", self.cmbCategoriaF.get_model()[punteiro][0])
+        self.parametro_filtro_categoria = self.cmbCategoriaF.get_model()[punteiro][0]
+        self.filtro_categoria.refilter()
+
+
+    def categoria_filtro(self, modelo,  punteiro, datos):
+
+        if self.parametro_filtro_categoria is None:
+            return True
+        else:
+            if modelo[punteiro][4]==self.parametro_filtro_categoria:
+                return True
+            else:
+                return False
+
+
+
 
 
 
