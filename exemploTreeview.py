@@ -3,10 +3,38 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
+"""
+
+"""
+
 
 class FiestraPrincipal(Gtk.Window):
+    """Formulario exemplo de uso TreeView. Fiestra principal.
+
+    Métodos:
+    __init__ -- Constructor
+    on_combo_edited
+    on_btnEngadir_clicked
+    etc...
+
+
+    """
 
     def __init__(self):
+        """Constructor da fiestra da clase Window.
+
+        Formulario que utiliza o Treeview filtrado, con celdas renderizadas para
+        distitos tipos de datos. Tamén se permite a selección e a edición das celdas
+        dos rexistros.
+
+        Parámetros:
+        -Non ten
+
+        Excepcións:
+        - Non ten
+
+        """
+
         Gtk.Window.__init__(self, title="Exemplo Gtk.TreeView")
         boxV = Gtk.Box (orientation = Gtk.Orientation.VERTICAL)
 
@@ -25,7 +53,8 @@ class FiestraPrincipal(Gtk.Window):
             self.categoria.append([estrelas*'*'])
 
 
-        vista = Gtk.TreeView(model = self.filtro_categoria)#modelo filtrado
+        #vista = Gtk.TreeView(model = self.filtro_categoria)#modelo filtrado para filtrar
+        vista = Gtk.TreeView(model=modelo) #modelo non filtrado para mostrar tódolos rexistros
         seleccion = vista.get_selection()
         seleccion.connect("changed", self.on_seleccion_changed)
         boxV.pack_start (vista, True, True, 0)
@@ -47,7 +76,7 @@ class FiestraPrincipal(Gtk.Window):
         vista.append_column (columnaOcupacion)
 
         celdaMascotas = Gtk.CellRendererToggle()
-
+        celdaMascotas.connect ("toggled", self.on_celdaMascotas_toggled, modelo)
         columnaMascotas = Gtk.TreeViewColumn ('Mascotas', celdaMascotas, active = 3)
         vista.append_column (columnaMascotas)
 
@@ -103,11 +132,23 @@ class FiestraPrincipal(Gtk.Window):
         self.show_all()
 
     def on_combo_edited (self, control, fila, texto, modelo ):
+        """Recolle o texto do combo e o pasa o modelo do Treeview.
+
+        Este método actualiza o estado do modelo o cambiar o usuario o texto directamente
+        na táboa
+
+        :param control: delda da táboa
+        :param fila: fila onde foi modificado o texto
+        :param texto: texto resultante da modificación
+        :param modelo: modelo do Treeview (ListStore)
+        :return: None
+
+        """
         modelo [fila][4] = texto
 
     def on_btnEngadir_clicked (self, control, modelo):
         fila = self.cmbCategoria.get_active_iter()
-        datos = [self.txtHotel.get_text(), self.txtDireccion.get_text(),self.txtOcupacion.get_text(),self.chkMascotas.get_mode(), self.cmbCategoria.get_model()[fila][0]]
+        datos = [self.txtHotel.get_text(), self.txtDireccion.get_text(), float(self.txtOcupacion.get_text()),self.chkMascotas.get_active(), self.cmbCategoria.get_model()[fila][0]]
         modelo.append (datos) #Engadir o recollido dos controis
 
     def on_seleccion_changed (self, seleccion):
@@ -135,6 +176,10 @@ class FiestraPrincipal(Gtk.Window):
         self.parametro_filtro_categoria = self.cmbCategoriaF.get_model()[punteiro][0]
         self.filtro_categoria.refilter()
 
+    def on_celdaMascotas_toggled (self, control, punteiro, modelo):
+        modelo [punteiro][3]= not control.get_active()
+        # modelo [punteiro][3]= not modelo [punteiro][3]
+
 
     def categoria_filtro(self, modelo,  punteiro, datos):
 
@@ -153,5 +198,6 @@ class FiestraPrincipal(Gtk.Window):
 
 
 if __name__ == "__main__":
+
     FiestraPrincipal()
     Gtk.main()
